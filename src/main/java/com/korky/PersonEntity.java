@@ -1,5 +1,6 @@
 package com.korky;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import org.bson.types.ObjectId;
@@ -21,6 +22,17 @@ public class PersonEntity {
         this.id = id;
         this.name = name;
         this.age = age;
+    }
+
+    public PersonEntity(String json) {
+        try {
+            PersonEntity personEntity = new ObjectMapper().readValue(json, PersonEntity.class);
+            this.id = personEntity.id;
+            this.name = personEntity.name;
+            this.age = personEntity.age;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -70,6 +82,5 @@ public class PersonEntity {
     public void setAge(Integer age) {
         this.age = age;
     }
-
 
 }
