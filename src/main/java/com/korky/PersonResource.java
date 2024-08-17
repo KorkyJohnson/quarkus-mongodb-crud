@@ -40,6 +40,12 @@ public class PersonResource {
         return personRepository.getPersons();
     }
 
+    @GET
+    @Path("/person/{name}")
+    public PersonEntity getPerson(@PathParam("name") String name) {
+        return personRepository.getPerson(name);
+    }
+
     @PUT
     @Path("/person/{id}")
     public long anniversaryPerson(@PathParam("id") String id) {
