@@ -34,6 +34,8 @@ class PersonResourceTest {
 
     PersonEntity personJson = new PersonEntity("{\"name\": \"Jannet Hanna\",\"age\": 46}");
     String resultId;
+    final String JANNET_HANNA = "Jannet Hanna";
+    final String API_PERSON = "/api/person";
 
     // Hello Quarkus Test
 
@@ -43,7 +45,8 @@ class PersonResourceTest {
         given()
                 .when().get("/api/hello")
                 .then()
-                .statusCode(200)
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK)
                 .body(is("Hello from Quarkus REST"));
     }
 
@@ -54,7 +57,7 @@ class PersonResourceTest {
         String resultId = given()
                 .contentType(ContentType.JSON)
                 .body(personJson)
-                .when().post("/api/person")
+                .when().post(API_PERSON)
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_OK)
@@ -66,26 +69,58 @@ class PersonResourceTest {
 
     @Test
     @Order(3)
-    void testDeletePerson() {
+    void testAnniversaryPerson() {
 
-        final String name = "Jannet Hanna";
-
+        // Query the database by name to get the document
         PersonEntity personEntity = given().log().all()
-                .when().get("/api/person/" + name)
+                .when().get(API_PERSON + "/" + JANNET_HANNA)
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_OK)
-                .body("name", equalTo(name))
+                .body("name", equalTo(JANNET_HANNA))
+                .extract()
+                .as(PersonEntity.class);
+
+        resultId = personEntity.getId().toHexString();
+        int expectedAge = personEntity.getAge() + 1;
+
+        given().log().all()
+                .contentType(ContentType.JSON)
+                .body(personJson)
+                .when().put(API_PERSON + "/" + resultId)
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
+
+        // Query the database again and check to see if the age was in fact increased
+        given().log().all()
+                .when().get(API_PERSON + "/" + JANNET_HANNA)
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .body("name", equalTo(JANNET_HANNA))
+                .body("age", equalTo(expectedAge));
+    }
+
+    @Test
+    @Order(4)
+    void testDeletePerson() {
+
+        PersonEntity personEntity = given().log().all()
+                .when().get(API_PERSON + "/" + JANNET_HANNA)
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .body("name", equalTo(JANNET_HANNA))
                 .extract()
                 .as(PersonEntity.class);
 
         resultId = personEntity.getId().toHexString();
 
-        ValidatableResponse response = given().log().all()
-                .contentType(ContentType.JSON)
-                .body(personJson)
-                .when().delete("/api/person/" + resultId)
+        given().log().all()
+                .when().delete(API_PERSON + "/" + resultId)
                 .then()
+                .assertThat()
                 .statusCode(200);
     }
 }
