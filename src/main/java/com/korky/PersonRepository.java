@@ -19,40 +19,47 @@ import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.inc;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class PersonRepository {
+    
+    @Inject MongoClient mongoClient;
 
-    private final MongoClient mongoClient;
-    private final MongoCollection<PersonEntity> collection;
+    // private final MongoClient mongoClient;
+    // private final MongoCollection<PersonEntity> collection;
 
-    public PersonRepository(MongoClient mongoClient) {
+    // public PersonRepository(MongoClient mongoClient) {
 
-        this.mongoClient = mongoClient;
-        this.collection = mongoClient.getDatabase("test").getCollection("persons", PersonEntity.class);
-    }
+    //     // this.mongoClient = mongoClient;
+    //     this.collection = mongoClient.getDatabase("test").getCollection("persons", PersonEntity.class);
+    // }
 
     public String add(PersonEntity person) {
-        return collection.insertOne(person).getInsertedId().asObjectId().getValue().toHexString();
+        return getCollection().insertOne(person).getInsertedId().asObjectId().getValue().toHexString();
     }
 
     public List<PersonEntity> getPersons() {
-        return collection.find().into(new ArrayList<>());
+        return getCollection().find().into(new ArrayList<>());
     }
 
     public PersonEntity getPerson(String name) {
-        return collection.find(eq("name", name)).first();
+        return getCollection().find(eq("name", name)).first();
     }
 
     public long anniversaryPerson(String id) {
         Bson filter = eq("_id", new ObjectId(id));
         Bson update = inc("age", 1);
-        return collection.updateOne(filter, update).getModifiedCount();
+        return getCollection().updateOne(filter, update).getModifiedCount();
     }
 
     public long deletePerson(String id) {
         Bson filter = eq("_id", new ObjectId(id));
-        return collection.deleteOne(filter).getDeletedCount();
+        return getCollection().deleteOne(filter).getDeletedCount();
+    }
+
+    private MongoCollection<PersonEntity> getCollection() {
+        return mongoClient.getDatabase("test").getCollection("persons", PersonEntity.class);
     }
 
 }
